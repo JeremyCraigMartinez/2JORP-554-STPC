@@ -15,7 +15,9 @@ def call():
 	#patient side of UDP communication
 	pass
 
-def check_neighbors(home, current, cur_cost, *visited):
+#old algorithm
+'''
+defsoy check_neighbors(home, current, cur_cost, *visited):
 	if current:
 		paths = current.paths
 	else:
@@ -30,9 +32,16 @@ def check_neighbors(home, current, cur_cost, *visited):
 		else:
 			call(home, each, cur_cost+each.cost, visited+each)
 	return
+'''
+
+def broadcast():
+	pass
 
 if __name__ == '__main__':
-	router = sys.argv[1]
+	if sys.argv[1] == "process":
+		listen()
+	else:
+		router = sys.argv[2]
 
-	#fill router information
-	#check_neighbors(self, None, 0, []) 
+		#fill router information
+		#check_neighbors(self, None, 0, [])
