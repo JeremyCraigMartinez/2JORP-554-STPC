@@ -11,6 +11,10 @@ def listen():
 	#go back to listening
 	pass
 
+def call():
+	#patient side of UDP communication
+	pass
+
 def check_neighbors(home, current, cur_cost, *visited):
 	if current:
 		paths = current.paths
