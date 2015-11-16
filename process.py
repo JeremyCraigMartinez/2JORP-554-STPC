@@ -31,4 +31,4 @@ if __name__ == '__main__':
 	router = sys.argv[1]
 
 	#fill router information
-	listen()
+	#check_neighbors(self, None, 0, []) 
