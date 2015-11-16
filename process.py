@@ -1,6 +1,9 @@
+#!/usr/bin/python
+
 #Socket Server that listens for connections and runs the algorithm
 
 import sys
+from readrouters import *
 
 def listen():
 	#start listening on whatever port
@@ -38,6 +41,12 @@ def broadcast():
 	pass
 
 if __name__ == '__main__':
+	if len(sys.argv) < 3:
+		exit("missing arguments")
+	table = readrouters(sys.argv[1])
+	
+	links = readlinks(sys.argv[1], sys.argv[2])
+
 	if sys.argv[1] == "process":
 		listen()
 	else:
