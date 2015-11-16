@@ -4,8 +4,10 @@
 
 import sys
 from readrouters import *
+import time #until implementation
 
 def listen():
+	raw_input("listenin...")
 	#start listening on whatever port
 
 	#if connection is made, read
@@ -38,19 +40,20 @@ defsoy check_neighbors(home, current, cur_cost, *visited):
 '''
 
 def broadcast():
+	print("broadcasting...")
+	time.sleep(2)
 	pass
 
 if __name__ == '__main__':
 	if len(sys.argv) < 3:
 		exit("missing arguments")
+
 	table = readrouters(sys.argv[1])
-	
+
 	links = readlinks(sys.argv[1], sys.argv[2])
 
-	if sys.argv[1] == "process":
+	if "-s" in sys.argv:
 		listen()
 	else:
-		router = sys.argv[2]
-
-		#fill router information
-		#check_neighbors(self, None, 0, [])
+		pass
+		broadcast()
