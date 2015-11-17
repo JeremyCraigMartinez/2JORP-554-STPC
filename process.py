@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 #Socket Server that listens for connections and runs the algorithm
-
+import socket
 import sys
 from readrouters import *
 import zmq
@@ -45,27 +45,39 @@ defsoy check_neighbors(home, current, cur_cost, *visited):
 
 def broadcast():
 	#patient side of UDP communication
-	context = zmq.Context()
-	socket = context.socket(zmq.REQ)
-	socket.connect("tcp://127.0.0.1:50001")
 
-	for i in range(100):
-		msg = "msg %s" % i
-		socket.send(msg)
-		print "Sending", msg
-		msg_in = socket.recv()	
-	pass
+    if __name__ == '__main__':
+        if len(sys.argv) < 3:
+            exit("missing arguments")
+           
 
-if __name__ == '__main__':
-	if len(sys.argv) < 3:
-		exit("missing arguments")
+    table = readrouters(sys.argv[1])
+    print table
 
-	table = readrouters(sys.argv[1])
+    links = readlinks(sys.argv[1], sys.argv[2])
+    i = 0
+    
+    sock = {}
+    for link in links:
+        data = data + "{0} {1} {2} {3}\n".format(link, links[link].cost, links[link].locallink, links[link].remotelink)
+    
+    print 'Start Broadcast'
+     
+    for i in table:
+         sock[i] = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+         server_address = (table[i].host, table[i].baseport)
+         sock.sendto(data, server_address)
+         
+     
 
-	links = readlinks(sys.argv[1], sys.argv[2])
-
-	if "-s" in sys.argv:
-		listen(table[sys.argv[2]].baseport)
-	else:
-		pass
-		broadcast()
+    if "-s" in sys.argv:
+        listen(table[sys.argv[2]].baseport)
+    else:
+        pass
+        broadcast()
+     
+     
+  
+  
+  
+  
