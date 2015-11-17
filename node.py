@@ -4,6 +4,7 @@
 
 import sys
 from readrouters import *
+from router import *
 import socket
 
 def listen(port, links):
