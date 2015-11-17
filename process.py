@@ -4,15 +4,13 @@
 
 import sys
 from readrouters import *
-import time #until implementation
-
 import zmq
 
-def listen():
-	raw_input("listenin...")
+def listen(port):
+	print port
 	context = zmq.Context()
 	socket = context.socket(zmq.REP)
-	socket.bind("tcp://127.0.0.1:50001")
+	socket.bind("tcp://127.0.0.1:"+str(port))
 
 	while True:
 		msg = socket.recv()
@@ -24,19 +22,6 @@ def listen():
 	#after reading, call check_neighbors
 
 	#go back to listening
-	pass
-
-def call():
-	#patient side of UDP communication
-	context = zmq.Context()
-	socket = context.socket(zmq.REQ)
-	socket.connect("tcp://127.0.0.1:50001")
-
-	for i in range(100):
-		msg = "msg %s" % i
-		socket.send(msg)
-		print "Sending", msg
-		msg_in = socket.recv()	
 	pass
 
 #old algorithm
@@ -59,7 +44,16 @@ defsoy check_neighbors(home, current, cur_cost, *visited):
 '''
 
 def broadcast():
-	call()
+	#patient side of UDP communication
+	context = zmq.Context()
+	socket = context.socket(zmq.REQ)
+	socket.connect("tcp://127.0.0.1:50001")
+
+	for i in range(100):
+		msg = "msg %s" % i
+		socket.send(msg)
+		print "Sending", msg
+		msg_in = socket.recv()	
 	pass
 
 if __name__ == '__main__':
@@ -71,7 +65,7 @@ if __name__ == '__main__':
 	links = readlinks(sys.argv[1], sys.argv[2])
 
 	if "-s" in sys.argv:
-		listen()
+		listen(table[sys.argv[2]].baseport)
 	else:
 		pass
 		broadcast()
