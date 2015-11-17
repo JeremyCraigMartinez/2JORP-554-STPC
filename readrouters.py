@@ -10,6 +10,8 @@ class LinkInfo:
         self.cost, self.locallink, self.remotelink = cost, locallink, remotelink;
     def __str__(self):
         return "{0} {1} {2}".format(self.cost, self.locallink, self.remotelink)
+    def __lt__(self, other):
+        return self.locallink < other.locallink
         
 def readrouters(testname):
     f = open(testname+'/routers')
