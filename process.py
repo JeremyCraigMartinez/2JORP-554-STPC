@@ -6,8 +6,18 @@ import sys
 from readrouters import *
 import time #until implementation
 
+import zmq
+
 def listen():
 	raw_input("listenin...")
+	context = zmq.Context()
+	socket = context.socket(zmq.REP)
+	socket.bind("tcp://127.0.0.1:50001")
+
+	while True:
+		msg = socket.recv()
+		print "Got", msg
+		socket.send(msg)	
 	#start listening on whatever port
 
 	#if connection is made, read
@@ -18,6 +28,15 @@ def listen():
 
 def call():
 	#patient side of UDP communication
+	context = zmq.Context()
+	socket = context.socket(zmq.REQ)
+	socket.connect("tcp://127.0.0.1:50001")
+
+	for i in range(100):
+		msg = "msg %s" % i
+		socket.send(msg)
+		print "Sending", msg
+		msg_in = socket.recv()	
 	pass
 
 #old algorithm
@@ -40,8 +59,7 @@ defsoy check_neighbors(home, current, cur_cost, *visited):
 '''
 
 def broadcast():
-	print("broadcasting...")
-	time.sleep(2)
+	call()
 	pass
 
 if __name__ == '__main__':
