@@ -3,17 +3,19 @@ import readrouters
 import socket
 
 def printTables(routerInfo):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     for router in routerInfo.keys():
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         endinfo = (routerInfo[router].host, routerInfo[router].baseport)
         msg = 'P'
-        s.sendto(msg, endinfo)
+        s.connect(endinfo)
+        s.send(msg)
 
 def printTable(router, routerInfo):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     endinfo = (routerInfo[router].host, routerInfo[router].baseport)
     msg = 'P'
-    s.sendto(msg, endinfo)
+    s.connect(endinfo)
+    s.send(msg)
 
 
 if __name__=='__main__':

@@ -9,15 +9,29 @@ import socket
 
 this_router = sys.argv[2]
 
-def broadcast(connected_sockets, links):
+def broadcast(connected_sockets, links, table=None):
   message = this_router + '\n'
   for link in links:
     message = message + link + ' ' + str(links[link]) + '\n'
   message = message
 
-  sockets = []
-
   for conn in connected_sockets:
-    sockets.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
-    sockets[len(sockets)-1].connect(conn)
-    sockets[len(sockets)-1].send(message)
+    sockets = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sockets.connect(conn)
+    sockets.send(message)
+
+if __name__ == '__main__':
+  offset = 1
+  if sys.argv[1] == '-p':
+    offset = offset + 1
+    #poison bitch
+    pass
+  dirname = sys.argv[offset]
+  router = sys.argv[offset+1]
+
+  table = readrouters(dirname)
+  links = readlinks(dirname, router)
+
+  connected_sockets = fill_connected_sockets(table, links)
+
+  broadcast(connected_sockets, links)

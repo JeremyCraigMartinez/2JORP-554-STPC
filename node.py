@@ -24,15 +24,18 @@ def listen(table, links, server):
 
 			else:
 				data = s.recv(1024)
-				updated, links = update(data, links)
-				if updated:
-					broadcast(connected_sockets, links)
-					pass
+				print data
+				if data == 'P':
+					printTable(links)
 				else:
-					if s in outputs:
-						outputs.remove(s)
+					updated, links = update(data, links)
+					if updated:
+						broadcast(connected_sockets, links)
 				inputs.remove(s)
 				s.close()
+
+def printTable(links):
+	print_links(links, status="current links")
 
 def update(data, links):
 	updates = False
@@ -44,7 +47,8 @@ def update(data, links):
 
 	rows = rows[1:]
 	rows = filter(None, rows)
-	print_links(links, from_node, rows=rows)
+
+	old = links.copy()
 
 	for row in rows:
 		tmp = row.split(' ')
@@ -57,14 +61,17 @@ def update(data, links):
 				links[tmp[0]].remotelink = int(tmp[2]) #next hop locallink
 				updates = True
 		else:
-			links[tmp[0]] = LinkInfo(int(tmp[1])+hop_off_node.cost, hop_off_node.locallink, tmp[3])
+			links[tmp[0]] = LinkInfo(int(tmp[1])+hop_off_node.cost, hop_off_node.locallink, tmp[2])
 			updates = True
 
-	print_links(links, status="new links: ")
+	if updates:
+		status = "old links: %s" % this_router
+		print_links(links, from_node, status=status, rows=rows)
+		print_links(links, status="new links: ")
 
 	return updates, links
 
-def print_links(links, from_node=None, rows=None, status="old links: "):
+def print_links(links, from_node=None, rows=None, status=""):
 	print status
 	if rows:
 		for link in links:
@@ -95,9 +102,11 @@ def set_sockets(table, links):
 	return server
 
 def fill_connected_sockets(table, links):
+	connected = []
 	for t in table:
 		if t in links:
-			connected_sockets.append((table[t].host, table[t].baseport))
+			connected.append((table[t].host, table[t].baseport))
+	return connected
 
 this_router = sys.argv[2]
 
@@ -105,6 +114,6 @@ if __name__ == '__main__':
 	table = readrouters(sys.argv[1])
 	links = readlinks(sys.argv[1], sys.argv[2])
 	server = set_sockets(table, links)
-	fill_connected_sockets(table, links)
+	connected_sockets = fill_connected_sockets(table, links)
 
 	listen(table, links, server)
