@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-#Socket Server that listens for connections and runs the algorithm
-
 import sys
 from readrouters import *
 from router import *
@@ -28,36 +26,13 @@ def listen(table, links, server):
 				data = s.recv(1024)
 				updated, links = update(data, links)
 				if updated:
-					broadcast(connected_sockets)
-					#outputs = outputs + connected_sockets
-					#queue.append(str(links))
+					broadcast(connected_sockets, links)
 					pass
 				else:
 					if s in outputs:
 						outputs.remove(s)
 				inputs.remove(s)
 				s.close()
-
-		'''was_writable = False					
-		for w in writable:
-			was_writable = True
-			try: 
-				next_msg = queue[0]
-			except Queue.Empty:
-				outputs.remove(w)
-			else:
-				w.send(next_msg)
-		if was_writable:
-			queue.pop(0)
-
-		for e in exceptional:
-			inputs.remove(e)
-			if e in outputs:
-				outputs.remove(e)
-			e.close()'''
-
-def is_cheaper(new, old):
-	return int(new[2]) < old.cost
 
 def update(data, links):
 	updates = False
@@ -68,40 +43,45 @@ def update(data, links):
 	hop_off_node = links[from_node]
 
 	rows = rows[1:]
-	print_links(links, rows=rows)
+	rows = filter(None, rows)
+	print_links(links, from_node, rows=rows)
 
 	for row in rows:
-		if this_router == row[0]:
+		tmp = row.split(' ')
+		if this_router == tmp[0]:
 			pass
-		elif row[0] in links:
-			if int(row[2])+hop_off_node.cost < links[row[0]].cost:
-				links[row[0]].cost = int(row[2])+hop_off_node.cost
-				links[row[0]].locallink = hop_off_node.locallink
-				links[row[0]].cost = row[4] #next hop locallink
+		elif tmp[0] in links:
+			if int(tmp[1])+hop_off_node.cost < links[tmp[0]].cost:
+				links[tmp[0]].cost = int(tmp[1])+hop_off_node.cost
+				links[tmp[0]].locallink = hop_off_node.locallink
+				links[tmp[0]].remotelink = int(tmp[2]) #next hop locallink
 				updates = True
 		else:
-			links[row[0]] = LinkInfo(int(row[2])+hop_off_node.cost, hop_off_node.locallink, row[4])
+			links[tmp[0]] = LinkInfo(int(tmp[1])+hop_off_node.cost, hop_off_node.locallink, tmp[3])
 			updates = True
 
 	print_links(links, status="new links: ")
 
 	return updates, links
 
-def print_links(links, rows=None, status="old links: "):
+def print_links(links, from_node=None, rows=None, status="old links: "):
 	print status
 	if rows:
 		for link in links:
 			print "{0} {1}".format(link, links[link])
 		print '~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+		print 'imported links: '+from_node
 		for row in rows:
 			print row
 	else:
 		for link in links:
 			print "{0} {1}".format(link, links[link])
+		print '---------------------------'
 	print '---------------------------'
 
 def set_sockets(table, links):
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	server.setblocking(0)
 
 	# Bind the socket to the port
@@ -114,9 +94,10 @@ def set_sockets(table, links):
 
 	return server
 
-def fill_connected_sockets(table):
+def fill_connected_sockets(table, links):
 	for t in table:
-		connected_sockets.append((table[t].host, table[t].baseport))
+		if t in links:
+			connected_sockets.append((table[t].host, table[t].baseport))
 
 this_router = sys.argv[2]
 
@@ -124,5 +105,6 @@ if __name__ == '__main__':
 	table = readrouters(sys.argv[1])
 	links = readlinks(sys.argv[1], sys.argv[2])
 	server = set_sockets(table, links)
+	fill_connected_sockets(table, links)
 
 	listen(table, links, server)
