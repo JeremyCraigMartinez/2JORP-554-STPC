@@ -12,6 +12,8 @@ class LinkInfo:
         return "{0} {1} {2}".format(self.cost, self.locallink, self.remotelink)
     def __lt__(self, other):
         return self.locallink < other.locallink
+    def __eq__(self, other):
+        return self.cost == other.cost and self.locallink == other.locallink and self.remotelink == other.remotelink
         
 def readrouters(testname):
     f = open(testname+'/routers')

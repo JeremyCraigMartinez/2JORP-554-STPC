@@ -6,8 +6,9 @@ from router import *
 import socket
 import select
 import Queue
+from copy import deepcopy
 
-def listen(table, links, server):
+def listen(table, links, server, poison):
 	inputs = [server]
 	outputs = []
 	queue = []
@@ -28,12 +29,14 @@ def listen(table, links, server):
 				elif data[0] == 'L':
 					# update links locally and then broadcast that to all other nodes it is linked to
 					links = changeLink(links, data)
-					broadcast(connected_sockets, links) # imported from router.py
+					cpylink = deepcopy(links) # need to deepcopy links inorder to not corrupt this version
+					broadcast(connected_sockets, links, poison, table, original_links, myself=this_router) # imported from router.py
 				else:
 					# call update; if links WAS updated, broadcast new changes to linked nodes
 					updated, links = update(data, links)
+					cpylink = deepcopy(links) # need to deepcopy links inorder to not corrupt this version
 					if updated:
-						broadcast(connected_sockets, links) # imported from router.py
+						broadcast(connected_sockets, cpylink, poison, table, original_links, myself=this_router) # imported from router.py
 				# remove inputs so next select call does not read it again
 				inputs.remove(s)
 				# close socket that select intercepted and that we were reading from
@@ -64,14 +67,14 @@ def update(data, links):
 	# remove leading character so that we can loop through <hop_off_node>'s links for comparison
 	rows = rows[1:]
 
-	old = links.copy() # deep copy for comparison later between old links and new links
+	old = deepcopy(links) # deep copy for comparison later between old links and new links
 
 	# loop links
 	for row in rows:
 		# split string by spaces in order to pick up multi-digit cost's
 		tmp = row.split(' ')
 		# if we're looking at ourselves, pass
-		if this_router == tmp[0]:
+		if this_router == tmp[0] or tmp[1] == 64:
 			pass
 		# if we already have a cost for reaching this node
 		elif tmp[0] in links:
@@ -83,6 +86,7 @@ def update(data, links):
 				updates = True
 		# if we currently cannot reach this node, create a link for it
 		else:
+
 			links[tmp[0]] = LinkInfo(int(tmp[1])+int(hop_off_node.cost), int(hop_off_node.locallink), int(tmp[2]))
 			updates = True
 
@@ -116,7 +120,7 @@ def set_sockets(table, links):
 	server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	server.setblocking(0)
 
-	server_address = ('localhost', table[sys.argv[2]].baseport)
+	server_address = ('localhost', table[this_router].baseport)
 	print >>sys.stderr, 'starting up on %s port %s' % server_address
 	server.bind(server_address)
 
@@ -132,13 +136,26 @@ def fill_connected_sockets(table, links):
 			connected.append((table[t].host, table[t].baseport))
 	return connected
 
-this_router = sys.argv[2]
+this_router = ""
 connected_sockets = []
+original_links = {}
 
 if __name__ == '__main__':
-	table = readrouters(sys.argv[1])
-	links = readlinks(sys.argv[1], sys.argv[2])
+	offset = 1
+	poison = False
+	if sys.argv[1] == '-p':
+		offset = offset + 1
+		poison = True
+		pass
+
+	dirname = sys.argv[offset]
+	this_router = sys.argv[offset+1]
+	router = sys.argv[offset+1]
+
+	table = readrouters(dirname)
+	links = readlinks(dirname, router)
+	original_links = deepcopy(links)
 	server = set_sockets(table, links)
 	connected_sockets = fill_connected_sockets(table, links)
 
-	listen(table, links, server)
+	listen(table, links, server, poison)
